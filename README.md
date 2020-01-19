@@ -45,14 +45,21 @@ SSRとしてローカルで起動
 
 `bingo_web/`
 ```
-firebase serve --only functions:nuxtServer,hosting
+$ firebase serve --only functions:nuxtServer,hosting
 ```
 
 #### デプロイ
 
-`bongo_web/`
+`bingo_web/functions/`
 ```
-firebase deploy --only functions:nuxtServer,hosting
+$ npm run prebuild
+$ npm run build
+$ npm run postbuild
+```
+
+`bingo_web/`
+```
+$ firebase deploy --only functions:nuxtServer,hosting
 ```
 
 後でStaginｇとProdutionに環境を分ける
