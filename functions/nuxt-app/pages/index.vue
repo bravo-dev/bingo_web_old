@@ -3,7 +3,7 @@
     <div class="container">
       <h1 class="is-size-1 has-text-centered">Bingo</h1>
         <b-field label="ビンゴ名">
-          <b-input v-vind="bingo-name"></b-input>
+          <b-input v-model="bingoName"></b-input>
         </b-field>
         <div class="bingo">
         <div class="columns is-mobile">
@@ -66,7 +66,7 @@
     <b-modal :active.sync="isModalActive" :width="640" scroll="keep">
       <nav class="panel">
         <p class="panel-heading">
-          項目
+          内容
         </p>
         <div class="panel-block">
           <b-input v-model="bingoItems[currentIndex]"></b-input>
@@ -83,7 +83,7 @@ export default {
   data() {
     return {
       isModalActive: false,
-      bingoItems: ["test","","","","","","","",""],
+      bingoItems: ["","","","","","","","",""],
       currentIndex: -1,
       bingoName: ""
     }
