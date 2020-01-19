@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "bulma": "^0.8.0",
+    "firebase": "^7.7.0",
     "firebase-admin": "^8.6.0",
     "firebase-functions": "^3.3.0",
     "node-sass": "^4.13.1",
