@@ -9,7 +9,8 @@ $blue: #72d0eb;
 $pink: #ffb3b3;
 $pink-invert: #fff;
 // Add a serif family
-$family-serif: "Merriweather", "Georgia", serif;
+// $family-serif: "Merriweather", "Georgia", serif;
+$family-serif: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', HiraginoCustom, 'Hiragino Kaku Gothic ProN', YuGothic, 'Yu Gothic Medium', Meiryo, sans-serif;
 
 // 3. Set the derived variables
 // Use the new pink as the primary color
