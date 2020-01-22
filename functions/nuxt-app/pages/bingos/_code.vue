@@ -3,7 +3,7 @@
     <div class="container">
       <h1 class="is-size-1 has-text-centered">Bingo</h1>
         <div style="margin-top: 24px;" class="has-text-centered">
-            <p><span class="is-size-4">test</span>さんが作った<br /><span class="is-size-3">test</span>ビンゴ<br />に参加しますか？</p>
+            <p><span class="is-size-4">{{ ownerName }}</span>さんが作った<br /><span class="is-size-3">{{ bingoName }}</span>ビンゴ<br />に参加しますか？</p>
         </div>
         <b-field style="margin-top: 24px;" label="ユーザー名">
           <b-input v-model="userName"></b-input>
@@ -11,51 +11,51 @@
         <div class="bingo">
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box" v-on:click="showModal(0)">
+            <div class="box">
               <p>{{ bingoItems[0] }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box" v-on:click="showModal(1)">
+            <div class="box">
               <p>{{ bingoItems[1] }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box" v-on:click="showModal(2)">
+            <div class="box">
               <p>{{ bingoItems[2] }}</p>
             </div>
           </div>
         </div>
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box" v-on:click="showModal(3)">
+            <div class="box">
               <p>{{ bingoItems[3] }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box" v-on:click="showModal(4)">
+            <div class="box">
               <p>{{ bingoItems[4] }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box" v-on:click="showModal(5)">
+            <div class="box">
               <p>{{ bingoItems[5] }}</p>
             </div>
           </div>
         </div>
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box" v-on:click="showModal(6)">
+            <div class="box">
               <p>{{ bingoItems[6] }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box" v-on:click="showModal(7)">
+            <div class="box">
               <p>{{ bingoItems[7] }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box" v-on:click="showModal(8)">
+            <div class="box">
               <p>{{ bingoItems[8] }}</p>
             </div>
           </div>
@@ -78,11 +78,14 @@ export default {
       db.collection('bingos').doc(this.bingoCode).get()
         .then((doc) => {
           if (doc.exists) {
+            this.ownerName = doc.data().userRef.data().name
             this.bingoName = doc.data().name
+            this.bingoDocRef = doc.ref
             db.collection('bingoItems').where("bingoRef", '==', doc.ref).get()
             .then((querySnapshot) => {
               querySnapshot.forEach((doc) => {
                 console.log(doc.id + ":" + doc.data().index + ":" + doc.data().body)
+                this.bingoItemDocRefs[doc.data().index] = doc.ref
                 this.$set(this.bingoItems, doc.data().index, doc.data().body)
               })
             })
@@ -96,80 +99,79 @@ export default {
   },
   data() {
     return {
-      isModalActive: false,
       bingoItems: ["","","","","","","","",""],
+      bingoItemDocRefs: [null, null, null, null, null, null],
+      bingoDocRef: null,
       currentIndex: -1,
-      bingoName: "",
       userName: "",
-      bingoCode: ""
+      ownerName: "",
+      bingoCode: "",
+      sheetCode: ""
     }
   },
   methods: {
-    showModal: function (idx) {
-      this.currentIndex = idx
-      this.isModalActive = true
-    },
-    hideModal: function (idx) {
-      this.isModalActive = false
-    },
-    create: function () {
-      if ( this.onwerName == "" || this.bingoName == "" || this.bingoItems.includes("")) {
-        console.log("blank item exist!")
-        console.log(this.ownerName)
-        console.log(this.bingoName)
-        console.log(this.bingoItems)
+    join: function () {
+      if ( this.userName == "") {
+        console.log("blank user name")
+        console.log(this.userName)
         return
       }
       db.collection("users").add({
-        name: this.ownerName
+        name: this.userName
       })
       .then((userRef) => {
         console.log(userRef.id)
-        this.createBingo(userRef)
+        this.createSheet(userRef)
       })
       .catch((error) => {
         console.log(error)
       })
     },
-    createBingo: function(userRef) {
-      let bingoRefId = ""
-      db.collection("bingos").add({
-        name: this.bingoName,
-        ownerRef: userRef
+    createSheet: function(userRef) {
+      let sheetRefId = ""
+      db.collection("sheets").add({
+        bingoRef: this.bingoDocRef,
+        userRef: userRef
       })
-      .then((bingoRef) => {
-        console.log(bingoRef)
-        bingoRefId = bingoRef.id
-        this.bingoItems.map(bingoItem => {
-          this.createBingoItem(bingoRef, bingoItem)
+      .then((sheetRef) => {
+        sheetRefId = sheetRef.id
+        console.log(sheetRef)
+        this.shuffle(this.bingoItemDocRefs)
+        this.bingoItemDocRefs.map((bingoItemDocRef, index) => {
+          this.createSheetItem(sheetRef, bingoItemDocRef, index)
         });
       })
       .then(() => {
-        this.bingoCode = bingoRefId
+        this.sheetCode = sheetRefId
+        this.$router.push(this.sheetUrl)
       })
       .catch((error) => {
         console.log(error)
       })
     },
-    createBingoItem: function(bingoRef, bingoItem) {
-      db.collection("bingoItem").add({
-          item: bingoItem,
-          bingoRef: bingoRef
+    createSheetItem: function(sheetRef, bingoItemDocRef, index) {
+      db.collection("SheetItems").add({
+          sheetRef: sheetRef,
+          bingoItemRef: bingoItemDocRef,
+          index: index
       })
-      .then((bingoItemRef) => {
-        console.log(bingoItemRef.id)
+      .then((SheetItemRef) => {
+        console.log(sheetItemRef.id)
       })
       .catch((error) => {
         console.log(error)
       })
     },
+    shuffle: function (array) {
+      array.sort(() => Math.random() - 0.5)
+    }
   },
   computed: {
-    bingoUrl: function() {
+    sheetUrl: function() {
       if (process.env.NODE_ENV == 'development') {
-        return 'http://localhost:3000' + '/bingos/' + this.bingoCode
+        return '/bingos/' + this.bingoCode + '/sheets/' + this.sheetCode
       } else {
-        return 'https://bingo-bravo.firebaseapp.com' + '/bingos/' + this.bingoCode
+        return '/bingos/' + this.bingoCode + '/sheets/' + this.sheetCode
       }
     }
   }
