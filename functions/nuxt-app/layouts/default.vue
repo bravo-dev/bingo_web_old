@@ -2,6 +2,7 @@
   <nuxt />
 </template>
 <script>
+
 export default {
   head: {
     meta: [

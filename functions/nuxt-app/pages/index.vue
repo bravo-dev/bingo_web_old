@@ -2,6 +2,9 @@
   <section class="section">
     <div class="container">
       <h1 class="is-size-1 has-text-centered">Bingo</h1>
+        <b-field label="ユーザー名">
+          <b-input v-model="ownerName"></b-input>
+        </b-field>
         <b-field label="ビンゴ名">
           <b-input v-model="bingoName"></b-input>
         </b-field>
@@ -59,7 +62,10 @@
         </div>
         </div>
       <div class="has-text-centered create">
-        <b-button>ビンゴを作る</b-button>
+        <b-button @click="create()">ビンゴを作る</b-button>
+        <div v-if="bingoCode">
+          <a :href="bingoUrl">{{ bingoUrl }}</a>
+        </div>
       </div>
     </div>
 
@@ -79,13 +85,25 @@
   </section>
 </template>
 <script>
+
+import firebase from '@/plugins/firebase'
+
+let locationObj;
+const db = firebase.firestore();
+
 export default {
+  created() {
+    console.log(location)
+    locationObj = location
+  },
   data() {
     return {
       isModalActive: false,
       bingoItems: ["","","","","","","","",""],
       currentIndex: -1,
-      bingoName: ""
+      bingoName: "",
+      ownerName: "",
+      bingoCode: ""
     }
   },
   methods: {
@@ -95,6 +113,62 @@ export default {
     },
     hideModal: function (idx) {
       this.isModalActive = false
+    },
+    create: function () {
+      if ( this.onwerName == "" || this.bingoName == "" || this.bingoItems.includes("")) {
+        console.log("blank item exist!")
+        console.log(this.ownerName)
+        console.log(this.bingoName)
+        console.log(this.bingoItems)
+        return
+      }
+      db.collection("users").add({
+        name: this.ownerName
+      })
+      .then((userRef) => {
+        console.log(userRef.id)
+        this.createBingo(userRef)
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+    },
+    createBingo: function(userRef) {
+      let bingoRefId = ""
+      db.collection("bingos").add({
+        name: this.bingoName,
+        ownerRef: userRef
+      })
+      .then((bingoRef) => {
+        console.log(bingoRef)
+        bingoRefId = bingoRef.id
+        this.bingoItems.map(bingoItem => {
+          this.createBingoItem(bingoRef, bingoItem)
+        });
+      })
+      .then(() => {
+        this.bingoCode = bingoRefId
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+    },
+    createBingoItem: function(bingoRef, bingoItem) {
+      db.collection("bingoItem").add({
+          item: bingoItem,
+          bingoRef: bingoRef
+      })
+      .then((bingoItemRef) => {
+        console.log(bingoItemRef.id)
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+    },
+  },
+  computed: {
+    bingoUrl: function() {
+      return locationObj.protocol + '//' + locationObj.host + '/bingo/' + this.bingoCode
     }
   }
 }
