@@ -78,7 +78,8 @@ export default {
       db.collection('bingos').doc(this.bingoCode).get()
         .then((doc) => {
           if (doc.exists) {
-            this.ownerName = doc.data().userRef.data().name
+            console.log(doc.data().ownerRef)
+            doc.data().ownerRef.get().then((owner) => {this.ownerName = owner.data().name})
             this.bingoName = doc.data().name
             this.bingoDocRef = doc.ref
             db.collection('bingoItems').where("bingoRef", '==', doc.ref).get()
@@ -100,9 +101,10 @@ export default {
   data() {
     return {
       bingoItems: ["","","","","","","","",""],
-      bingoItemDocRefs: [null, null, null, null, null, null],
+      bingoItemDocRefs: [null, null, null, null, null, null, null, null, null],
       bingoDocRef: null,
       currentIndex: -1,
+      bingoName: "",
       userName: "",
       ownerName: "",
       bingoCode: "",
@@ -150,10 +152,11 @@ export default {
       })
     },
     createSheetItem: function(sheetRef, bingoItemDocRef, index) {
-      db.collection("SheetItems").add({
+      db.collection("sheetItems").add({
           sheetRef: sheetRef,
           bingoItemRef: bingoItemDocRef,
-          index: index
+          index: index,
+          is_done: false
       })
       .then((SheetItemRef) => {
         console.log(sheetItemRef.id)
