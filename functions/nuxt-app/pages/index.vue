@@ -135,8 +135,8 @@ export default {
       .then((bingoRef) => {
         console.log(bingoRef)
         bingoRefId = bingoRef.id
-        this.bingoItems.map(bingoItem => {
-          this.createBingoItem(bingoRef, bingoItem)
+        this.bingoItems.map((bingoItem, index) => {
+          this.createBingoItem(bingoRef, bingoItem, index)
         });
       })
       .then(() => {
@@ -146,10 +146,11 @@ export default {
         console.log(error)
       })
     },
-    createBingoItem: function(bingoRef, bingoItem) {
-      db.collection("bingoItem").add({
-          item: bingoItem,
-          bingoRef: bingoRef
+    createBingoItem: function(bingoRef, bingoItem, index) {
+      db.collection("bingoItems").add({
+          body: bingoItem,
+          bingoRef: bingoRef,
+          index: index
       })
       .then((bingoItemRef) => {
         console.log(bingoItemRef.id)
