@@ -85,17 +85,10 @@
   </section>
 </template>
 <script>
-
 import firebase from '@/plugins/firebase'
-
-let locationObj;
 const db = firebase.firestore();
 
 export default {
-  created() {
-    console.log(location)
-    locationObj = location
-  },
   data() {
     return {
       isModalActive: false,
@@ -168,7 +161,11 @@ export default {
   },
   computed: {
     bingoUrl: function() {
-      return locationObj.protocol + '//' + locationObj.host + '/bingo/' + this.bingoCode
+      if (process.env.NODE_ENV == 'development') {
+        return 'http://localhost:3000' + '/bingos/' + this.bingoCode
+      } else {
+        return 'https://bingo-bravo.firebaseapp.com' + '/bingos/' + this.bingoCode
+      }
     }
   }
 }
