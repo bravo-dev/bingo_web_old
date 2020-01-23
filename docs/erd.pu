@@ -39,11 +39,21 @@ entity SheetItem {
     square_number
 }
 
+entity Notification {
+    id
+    ---
+    bingo_id
+    sheet_id
+    body
+}
+
 Bingo ||--o{ Sheet
 Sheet ||--|| User
 Bingo ||--|| User
 Bingo ||--|{ BingoItem
 Sheet ||--|{ SheetItem
 BingoItem ||--|{ SheetItem
+Bingo ||--o{ Notification
+Sheet ||--o{ Notification
 
 @enduml
