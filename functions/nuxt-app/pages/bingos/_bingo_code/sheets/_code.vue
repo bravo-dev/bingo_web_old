@@ -5,58 +5,61 @@
         <div style="margin-top: 24px;" class="has-text-centered">
             <p><span class="is-size-4">{{ userName }}</span>さんの<br /><span class="is-size-3">{{ bingoName }}</span>ビンゴシート</p>
         </div>
-        <div class="bingo">
+        <div v-if=" !sheetItems.includes(null) " class="bingo">
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[0] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[0].done }" v-on:click="done(0)">
+              <p>{{ sheetItems[0].body }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[1] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[1].done }" v-on:click="done(1)">
+              <p>{{ sheetItems[1].body }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[2] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[2].done }" v-on:click="done(2)">
+              <p>{{ sheetItems[2].body }}</p>
             </div>
           </div>
         </div>
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[3] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[3].done }" v-on:click="done(3)">
+              <p>{{ sheetItems[3].body }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[4] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[4].done }" v-on:click="done(4)">
+              <p>{{ sheetItems[4].body }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[5] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[5].done }" v-on:click="done(5)">
+              <p>{{ sheetItems[5].body }}</p>
             </div>
           </div>
         </div>
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[6] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[6].done }" v-on:click="done(6)">
+              <p>{{ sheetItems[6].body }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[7] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[7].done }" v-on:click="done(7)">
+              <p>{{ sheetItems[7].body }}</p>
             </div>
           </div>
           <div class="column">
-            <div class="box">
-              <p>{{ sheetItems[8] }}</p>
+            <div class="box" v-bind:class="{ done: sheetItems[8].done }" v-on:click="done(8)">
+              <p>{{ sheetItems[8].body }}</p>
             </div>
           </div>
         </div>
+        </div>
+        <div v-if="isShowNotify" class="notification is-primary">
+          <p>{{ notifyBody }}</p>
         </div>
     </div>
   </section>
@@ -72,18 +75,29 @@ export default {
       db.collection('sheets').doc(this.sheetCode).get()
         .then((doc) => {
           if (doc.exists) {
+            this.sheetRef = doc.ref
             doc.data().userRef.get().then((user) => {this.userName = user.data().name})
             doc.data().bingoRef.get().then((bingo) => {this.bingoName = bingo.data().name})
-            console.log('test')
+            this.bingoRef = doc.data().bingoRef
             db.collection('sheetItems').where("sheetRef", '==', doc.ref).get()
             .then((querySnapshot) => {
               querySnapshot.forEach((doc) => {
-                this.$set(this.sheetItemDocRefs, doc.data().index, doc.ref)
+                this.$set(this.sheetItemDocs, doc.data().index, doc)
                 doc.data().bingoItemRef.get().then((bingoItem) => {
-                  this.$set(this.sheetItems, doc.data().index, bingoItem.data().body)
+                  this.$set(this.sheetItems, doc.data().index, {done: false, body: bingoItem.data().body})
+                  db.collection("notifications")
+                  .onSnapshot((snapshot) => {
+                    snapshot.forEach((doc, idx) => {
+                      if (idx == 0) {
+                        console.log(doc)
+                        this.showNotify(doc.data().body)
+                      }
+                    })
+                  })
                 })
               })
             })
+
           } else {
             console.log("no document")
           }
@@ -94,16 +108,53 @@ export default {
   },
   data() {
     return {
-      sheetItemDocRefs: [null, null, null, null, null, null, null, null, null],
-      sheetItems: ["", "", "", "", "", "", "", "", ""],
+      sheetItemDocs: [null, null, null, null, null, null, null, null, null],
+      sheetItems: [null, null, null, null, null, null, null, null, null],
       currentIndex: -1,
       userName: "",
       bingoName: "",
       bingoCode: "",
-      sheetCode: ""
+      sheetCode: "",
+      bingoRef: null,
+      sheetRef: null,
+      isShowNotify: false,
+      notifyBody: ""
     }
   },
   methods: {
+    done: function (idx) {
+      this.sheetItems[idx].done = true
+      console.log(this.sheetItemDocs[idx])
+      this.sheetItemDocs[idx].ref.update({
+        is_done: true
+      })
+      .then(() =>  {
+        console.log("item become done")
+        this.notify(idx)
+      })
+    },
+    notify: function (idx) {
+      db.collection('notifications').add({
+        bingoRef: this.bingoRef,
+        sheetRef: this.sheetRef,
+        body: this.userName + "さんが " + this.sheetItems[idx].body + " のマスをあけました！"
+      })
+      .then((notificationRef) => {
+        console.log("notified")
+      })
+      .catch((error) => {
+        console.log("failed notify")
+      })
+    },
+    showNotify: function (notifyBody) {
+      console.log(notifyBody)
+      this.notifyBody = notifyBody
+      this.isShowNotify = true
+      setTimeout(this.hideNotify, 3000)
+    },
+    hideNotify: function () {
+      this.isShowNotify = false
+    }
   }
 }
 </script>
@@ -132,5 +183,9 @@ nav.panel {
 .panel .panel-heading {
   background-color: #00C4A7;
   color: white;
+}
+
+.done {
+  background-color: violet;
 }
 </style>
