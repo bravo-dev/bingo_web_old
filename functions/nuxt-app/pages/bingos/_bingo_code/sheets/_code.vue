@@ -8,53 +8,71 @@
         <div v-if=" !sheetItems.includes(null) " class="bingo">
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[0].done }" v-on:click="done(0)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[0]" class="box" v-bind:class="{ done: sheetItems[0].done }" v-on:click="done(0)">
               <p>{{ sheetItems[0].body }}</p>
             </div>
+            </transition>
           </div>
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[1].done }" v-on:click="done(1)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[1]" class="box" v-bind:class="{ done: sheetItems[1].done }" v-on:click="done(1)">
               <p>{{ sheetItems[1].body }}</p>
             </div>
+            </transition>
           </div>
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[2].done }" v-on:click="done(2)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[2]" class="box" v-bind:class="{ done: sheetItems[2].done }" v-on:click="done(2)">
               <p>{{ sheetItems[2].body }}</p>
             </div>
+            </transition>
           </div>
         </div>
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[3].done }" v-on:click="done(3)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[3]" class="box" v-bind:class="{ done: sheetItems[3].done }" v-on:click="done(3)">
               <p>{{ sheetItems[3].body }}</p>
             </div>
+            </transition>
           </div>
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[4].done }" v-on:click="done(4)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[4]" class="box" v-bind:class="{ done: sheetItems[4].done }" v-on:click="done(4)">
               <p>{{ sheetItems[4].body }}</p>
             </div>
+            </transition>
           </div>
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[5].done }" v-on:click="done(5)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[5]" class="box" v-bind:class="{ done: sheetItems[5].done }" v-on:click="done(5)">
               <p>{{ sheetItems[5].body }}</p>
             </div>
+            </transition>
           </div>
         </div>
         <div class="columns is-mobile">
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[6].done }" v-on:click="done(6)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[6]" class="box" v-bind:class="{ done: sheetItems[6].done }" v-on:click="done(6)">
               <p>{{ sheetItems[6].body }}</p>
             </div>
+            </transition>
           </div>
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[7].done }" v-on:click="done(7)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[7]" class="box" v-bind:class="{ done: sheetItems[7].done }" v-on:click="done(7)">
               <p>{{ sheetItems[7].body }}</p>
             </div>
+            </transition>
           </div>
           <div class="column">
-            <div class="box" v-bind:class="{ done: sheetItems[8].done }" v-on:click="done(8)">
+            <transition name="bounce">
+            <div v-show="isPanelShows[8]" class="box" v-bind:class="{ done: sheetItems[8].done }" v-on:click="done(8)">
               <p>{{ sheetItems[8].body }}</p>
             </div>
+            </transition>
           </div>
         </div>
         </div>
@@ -192,7 +210,8 @@ export default {
           {line: [2 ,5 ,8], isDone: false},
           {line: [0 ,4 ,8], isDone: false},
           {line: [2 ,4 ,6], isDone: false}
-        ]
+        ],
+      isPanelShows: [true, true, true, true, true, true, true, true, true]
     }
   },
   methods: {
@@ -208,7 +227,7 @@ export default {
       })
     },
     done: function (idx) {
-      this.sheetItems[idx].done = true
+      this.$set(this.isPanelShows, idx, false)
       console.log(this.sheetItemDocs[idx])
       this.sheetItemDocs[idx].ref.update({
         is_done: true
@@ -218,6 +237,13 @@ export default {
         this.notifyDone(idx)
         this.checkBingo()
       })
+      setTimeout(this.showPanel, 1000, idx)
+    },
+    showPanel: function(idx) {
+      console.log("called showPanel")
+      console.log(idx)
+      this.sheetItems[idx].done = true
+      this.$set(this.isPanelShows, idx, true)
     },
     notifyDone: function (idx) {
       db.collection('notifications').add({
@@ -343,6 +369,26 @@ nav.panel {
 
 .fade-eter .fade-leave-to {
   opacity: 0;
+}
+
+.bounce-enter-active {
+  animation: bounce-in .5s;
+}
+
+.bounce-leave-active {
+  animation: bounce-in .5s reverse;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0)
+  }
+  50% {
+    transform: scale(1.5)
+  }
+  100% {
+    transform: scale(1)
+  }
 }
 
 </style>
