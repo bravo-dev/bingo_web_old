@@ -70,41 +70,84 @@ const db = firebase.firestore();
 
 export default {
   created() {
-      console.log(this.$route)
-      this.sheetCode = this.$route.params.code
-      db.collection('sheets').doc(this.sheetCode).get()
-        .then((doc) => {
-          if (doc.exists) {
-            this.sheetRef = doc.ref
-            doc.data().userRef.get().then((user) => {this.userName = user.data().name})
-            doc.data().bingoRef.get().then((bingo) => {this.bingoName = bingo.data().name})
-            this.bingoRef = doc.data().bingoRef
-            db.collection('sheetItems').where("sheetRef", '==', doc.ref).get()
-            .then((querySnapshot) => {
-              querySnapshot.forEach((doc) => {
-                this.$set(this.sheetItemDocs, doc.data().index, doc)
-                doc.data().bingoItemRef.get().then((bingoItem) => {
-                  this.$set(this.sheetItems, doc.data().index, {done: false, body: bingoItem.data().body})
-                  db.collection("notifications")
-                  .onSnapshot((snapshot) => {
-                    snapshot.forEach((doc, idx) => {
-                      if (idx == 0) {
-                        console.log(doc)
-                        this.showNotify(doc.data().body)
-                      }
-                    })
-                  })
-                })
-              })
-            })
 
-          } else {
-            console.log("no document")
-          }
+    const watchNotification = (doc) => {
+      console.log("called watchNotification")
+      console.log(doc.data().bingoRef)
+      db.collection("notifications").where("bingoRef", "==", doc.data().bingoRef)
+        .onSnapshot((snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type == "added") {
+              console.log("notify update state")
+              console.log(change.doc)
+              this.showNotify(change.doc.data().body)
+            }
+          })
         })
-        .catch((error) => {
-          console.log(error)
+     }
+
+    const setItems = (doc) => {
+      console.log("called setItems")
+      db.collection('sheetItems').where("sheetRef", '==', doc.ref).get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            this.$set(this.sheetItemDocs, doc.data().index, doc)
+            doc.data().bingoItemRef.get().then((bingoItem) => {
+              this.$set(this.sheetItems, doc.data().index,
+                {done: false, body: bingoItem.data().body})
+
+            })
+          })
         })
+      return Promise.resolve(doc)
+     }
+
+     const setUserName = (doc) => {
+       console.log("called setUserName")
+        doc.data().userRef.get().then((user) => {
+          this.userName = user.data().name
+        })
+        return Promise.resolve(doc)
+     }
+
+    const setBingoName = (doc) => {
+      console.log("called setBingoName")
+        doc.data().bingoRef.get().then((bingo) => {
+          this.bingoName = bingo.data().name
+        })
+        return Promise.resolve(doc)
+    }
+
+    const setSheet = (doc) => {
+      console.log("called setSheet")
+      if (doc.exists) {
+        this.sheetRef = doc.ref
+        this.bingoRef = doc.data().bingoRef
+        return Promise.resolve(doc)
+      } else {
+        console.log("no document")
+      }
+    }
+
+    const onRejected = (err) => {
+      console.log(err)
+    }
+
+    const getSheet = (sheetCode) => {
+      console.log("call getSheet")
+      db.collection('sheets').doc(this.sheetCode).get()
+        .then(setSheet, onRejected)
+        .then(setBingoName, onRejected)
+        .then(setUserName, onRejected)
+        .then(setItems, onRejected)
+        .then(watchNotification)
+    }
+
+    console.log(this.$route)
+    this.sheetCode = this.$route.params.code
+
+    getSheet(this.sheetCode)
+
   },
   data() {
     return {
