@@ -58,8 +58,11 @@
           </div>
         </div>
         </div>
-        <div v-if="isShowNotify" class="notification is-primary">
-          <p>{{ notifyBody }}</p>
+        <div v-if="isShowNotifyBingo" class="notification notification_bingo">
+          <p>{{ notifyBingoBody }}</p>
+        </div>
+        <div v-if="isShowNotifyDone" class="notification notification_done">
+          <p>{{ notifyDoneBody }}</p>
         </div>
     </div>
   </section>
@@ -72,17 +75,25 @@ export default {
   created() {
 
     const watchNotification = (doc) => {
+      let isFirstChange = true
       console.log("called watchNotification")
       console.log(doc.data().bingoRef)
       db.collection("notifications").where("bingoRef", "==", doc.data().bingoRef)
         .onSnapshot((snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            if (change.type == "added") {
-              console.log("notify update state")
-              console.log(change.doc)
-              this.showNotify(change.doc.data().body)
+            if (change.type == "added" && !isFirstChange) {
+              if (change.doc.data().sheetRef.id != this.sheetRef.id) {
+                console.log("notify update state")
+                console.log(change.doc)
+                if (change.doc.data().type == "done") {
+                  this.showNotifyDone(change.doc.data().body)
+                } else if (change.doc.data().type == "bingo") {
+                  this.showNotifyBingo(change.doc.data().body)
+                }
+              }
             }
           })
+          isFirstChange = false
         })
      }
 
@@ -91,11 +102,15 @@ export default {
       db.collection('sheetItems').where("sheetRef", '==', doc.ref).get()
         .then((querySnapshot) => {
           querySnapshot.forEach((doc) => {
+            console.log(doc.data())
             this.$set(this.sheetItemDocs, doc.data().index, doc)
+            const isDone = doc.data().is_done
             doc.data().bingoItemRef.get().then((bingoItem) => {
               this.$set(this.sheetItems, doc.data().index,
-                {done: false, body: bingoItem.data().body})
-
+                {done: isDone, body: bingoItem.data().body})
+              if (!this.sheetItems.includes(null)) {
+                this.setBingos(this.sheetItems)
+              }
             })
           })
         })
@@ -160,11 +175,34 @@ export default {
       sheetCode: "",
       bingoRef: null,
       sheetRef: null,
-      isShowNotify: false,
-      notifyBody: ""
+      isShowNotifyDone: false,
+      notifyDoneBody: "",
+      isShowNotifyBingo: false,
+      notifyBingoBody: "",
+      bingos: [
+          {line: [0 ,1 ,2], isDone: false},
+          {line: [3 ,4 ,5], isDone: false},
+          {line: [6 ,7 ,8], isDone: false},
+          {line: [0 ,3 ,6], isDone: false},
+          {line: [1 ,4 ,7], isDone: false},
+          {line: [2 ,5 ,8], isDone: false},
+          {line: [0 ,4 ,8], isDone: false},
+          {line: [2 ,4 ,6], isDone: false}
+        ]
     }
   },
   methods: {
+    setBingos: function(sheetItems) {
+      this.bingos.forEach((bingo) => {
+        let isDone = true
+        bingo.line.forEach((index) => {
+          if (sheetItems[index].done == false) {
+            isDone = false
+          }
+        })
+        bingo.isDone = isDone
+      })
+    },
     done: function (idx) {
       this.sheetItems[idx].done = true
       console.log(this.sheetItemDocs[idx])
@@ -173,30 +211,83 @@ export default {
       })
       .then(() =>  {
         console.log("item become done")
-        this.notify(idx)
+        this.notifyDone(idx)
+        this.checkBingo()
       })
     },
-    notify: function (idx) {
+    notifyDone: function (idx) {
       db.collection('notifications').add({
         bingoRef: this.bingoRef,
         sheetRef: this.sheetRef,
-        body: this.userName + "さんが " + this.sheetItems[idx].body + " のマスをあけました！"
+        body: this.userName + "さんが " + this.sheetItems[idx].body + " のマスをあけました！",
+        type: "done"
       })
       .then((notificationRef) => {
-        console.log("notified")
+        console.log("done notified")
       })
       .catch((error) => {
-        console.log("failed notify")
+        console.log("failed done notify")
       })
     },
-    showNotify: function (notifyBody) {
-      console.log(notifyBody)
-      this.notifyBody = notifyBody
-      this.isShowNotify = true
-      setTimeout(this.hideNotify, 3000)
+    notifyBingo: function() {
+      db.collection('notifications').add({
+        bingoRef: this.bingoRef,
+        sheetRef: this.sheetRef,
+        body: this.userName + "さんがビンゴ成立しました！",
+        type: "bingo"
+      })
+      .then((notificationRef) => {
+        console.log("bingo notified")
+      })
+      .catch((error) => {
+        console.log("failed bingo notify")
+      })
     },
-    hideNotify: function () {
-      this.isShowNotify = false
+    showNotifyDone: function (notifyDoneBody) {
+      console.log(notifyDoneBody)
+      this.notifyDoneBody = notifyDoneBody
+      this.isShowNotifyDone = true
+      setTimeout(this.hideNotifyDone, 3000)
+    },
+    hideNotifyDone: function () {
+      this.isShowNotifyDone = false
+    },
+    showNotifyBingo: function (notifyBingoBody) {
+      console.log(notifyBingoBody)
+      this.notifyBingoBody = notifyBingoBody
+      this.isShowNotifyBingo = true
+      setTimeout(this.hideNotifyBingo, 3000)
+    },
+    hideNotifyBingo: function () {
+      this.isShowNotifyBingo = false
+    },
+    checkBingo: function() {
+      if (!this.sheetItems.includes(null)) {
+        console.log("call checkBingo")
+
+        const items = this.sheetItems.map((item, index) => {
+          item.oldIndex = index
+          return item
+        })
+        console.log(items)
+        const dones = items.filter((item, index) => {
+          return (item.done == true)
+        })
+        console.log(dones)
+        this.bingos.forEach((bingo) => {
+          let isNotBingo = false
+          bingo.line.forEach((index) => {
+            if (!dones.map((done) => {return done.oldIndex}).includes(index)) {
+              isNotBingo = true
+            }
+          })
+          if (bingo.isDone == false && isNotBingo == false) {
+            bingo.isDone = true
+            console.log("bingo!!")
+            this.notifyBingo()
+          }
+        })
+      }
     }
   }
 }
@@ -230,5 +321,15 @@ nav.panel {
 
 .done {
   background-color: violet;
+}
+
+.notification_done {
+  background-color: deepskyblue;
+  color: white;
+}
+
+.notification_bingo {
+  background-color: fuchsia;
+  color: white;
 }
 </style>
