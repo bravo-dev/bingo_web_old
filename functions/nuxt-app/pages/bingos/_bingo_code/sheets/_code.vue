@@ -58,12 +58,16 @@
           </div>
         </div>
         </div>
-        <div v-if="isShowNotifyBingo" class="notification notification_bingo">
-          <p>{{ notifyBingoBody }}</p>
-        </div>
-        <div v-if="isShowNotifyDone" class="notification notification_done">
-          <p>{{ notifyDoneBody }}</p>
-        </div>
+        <transition name="fade">
+          <div v-if="isShowNotifyBingo" class="notification notification_bingo">
+            <p>{{ notifyBingoBody }}</p>
+          </div>
+        </transition>
+        <transition name="fade">
+          <div v-if="isShowNotifyDone" class="notification notification_done">
+            <p>{{ notifyDoneBody }}</p>
+          </div>
+        </transition>
     </div>
   </section>
 </template>
@@ -332,4 +336,13 @@ nav.panel {
   background-color: fuchsia;
   color: white;
 }
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+
+.fade-eter .fade-leave-to {
+  opacity: 0;
+}
+
 </style>
