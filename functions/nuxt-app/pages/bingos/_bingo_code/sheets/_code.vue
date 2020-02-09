@@ -9,21 +9,21 @@
         <div class="columns is-mobile">
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[0]" class="box" v-bind:class="{ done: sheetItems[0].done }" v-on:click="done(0)">
+            <div v-show="isPanelShows[0]" class="box" v-bind:class="{ done: sheetItems[0].done, bingo: sheetItems[0].bingo }" v-on:click="done(0)">
               <p>{{ sheetItems[0].body }}</p>
             </div>
             </transition>
           </div>
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[1]" class="box" v-bind:class="{ done: sheetItems[1].done }" v-on:click="done(1)">
+            <div v-show="isPanelShows[1]" class="box" v-bind:class="{ done: sheetItems[1].done, bingo: sheetItems[1].bingo }" v-on:click="done(1)">
               <p>{{ sheetItems[1].body }}</p>
             </div>
             </transition>
           </div>
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[2]" class="box" v-bind:class="{ done: sheetItems[2].done }" v-on:click="done(2)">
+            <div v-show="isPanelShows[2]" class="box" v-bind:class="{ done: sheetItems[2].done, bingo: sheetItems[2].bingo }" v-on:click="done(2)">
               <p>{{ sheetItems[2].body }}</p>
             </div>
             </transition>
@@ -32,21 +32,21 @@
         <div class="columns is-mobile">
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[3]" class="box" v-bind:class="{ done: sheetItems[3].done }" v-on:click="done(3)">
+            <div v-show="isPanelShows[3]" class="box" v-bind:class="{ done: sheetItems[3].done, bingo: sheetItems[3].bingo }" v-on:click="done(3)">
               <p>{{ sheetItems[3].body }}</p>
             </div>
             </transition>
           </div>
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[4]" class="box" v-bind:class="{ done: sheetItems[4].done }" v-on:click="done(4)">
+            <div v-show="isPanelShows[4]" class="box" v-bind:class="{ done: sheetItems[4].done, bingo: sheetItems[4].bingo }" v-on:click="done(4)">
               <p>{{ sheetItems[4].body }}</p>
             </div>
             </transition>
           </div>
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[5]" class="box" v-bind:class="{ done: sheetItems[5].done }" v-on:click="done(5)">
+            <div v-show="isPanelShows[5]" class="box" v-bind:class="{ done: sheetItems[5].done, bingo: sheetItems[5].bingo }" v-on:click="done(5)">
               <p>{{ sheetItems[5].body }}</p>
             </div>
             </transition>
@@ -55,21 +55,21 @@
         <div class="columns is-mobile">
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[6]" class="box" v-bind:class="{ done: sheetItems[6].done }" v-on:click="done(6)">
+            <div v-show="isPanelShows[6]" class="box" v-bind:class="{ done: sheetItems[6].done, bingo: sheetItems[6].bingo }" v-on:click="done(6)">
               <p>{{ sheetItems[6].body }}</p>
             </div>
             </transition>
           </div>
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[7]" class="box" v-bind:class="{ done: sheetItems[7].done }" v-on:click="done(7)">
+            <div v-show="isPanelShows[7]" class="box" v-bind:class="{ done: sheetItems[7].done, bingo: sheetItems[7].bingo }" v-on:click="done(7)">
               <p>{{ sheetItems[7].body }}</p>
             </div>
             </transition>
           </div>
           <div class="column">
             <transition name="bounce">
-            <div v-show="isPanelShows[8]" class="box" v-bind:class="{ done: sheetItems[8].done }" v-on:click="done(8)">
+            <div v-show="isPanelShows[8]" class="box" v-bind:class="{ done: sheetItems[8].done, bingo: sheetItems[8].bingo }" v-on:click="done(8)">
               <p>{{ sheetItems[8].body }}</p>
             </div>
             </transition>
@@ -135,9 +135,10 @@ export default {
             console.log(doc.data())
             this.$set(this.sheetItemDocs, doc.data().index, doc)
             const isDone = doc.data().is_done
+            const isBingo = doc.data().is_bingo
             doc.data().bingoItemRef.get().then((bingoItem) => {
               this.$set(this.sheetItems, doc.data().index,
-                {done: isDone, body: bingoItem.data().body})
+                {done: isDone, bingo: isBingo, body: bingoItem.data().body})
               if (!this.sheetItems.includes(null)) {
                 this.setBingos(this.sheetItems)
               }
@@ -246,12 +247,29 @@ export default {
         this.notifyDone(idx)
         this.checkBingo()
       })
-      setTimeout(this.showPanel, 1000, idx)
+      setTimeout(this.showPanelAsDone, 1000, idx)
     },
-    showPanel: function(idx) {
+    bingo: function (line) {
+      line.forEach((item, idx) => {
+        this.$set(this.isPanelShows, idx, false)
+        this.sheetItems.bingo = true
+        this.sheetItemDocs[idx].ref.update({
+          is_bingo: true
+        })
+        .then(() => {
+          //
+        })
+        setTimeout(this.showPanelAsBingo, 1000, idx)
+      })
+    },
+    showPanelAsDone: function(idx) {
       console.log("called showPanel")
       console.log(idx)
       this.sheetItems[idx].done = true
+      this.$set(this.isPanelShows, idx, true)
+    },
+    showPanelAsBingo: function(idx) {
+      this.sheetItems[idx].bongo = true
       this.$set(this.isPanelShows, idx, true)
     },
     notifyDone: function (idx) {
@@ -324,6 +342,7 @@ export default {
             bingo.isDone = true
             console.log("bingo!!")
             this.notifyBingo()
+            this.bingo(bingo.line)
           }
         })
       }
@@ -340,6 +359,9 @@ export default {
 }
 </script>
 <style scoped>
+.columns {
+ height: 124px;
+}
 .box {
   background-color: #00C4A7;
   height: 120px;
@@ -368,6 +390,10 @@ nav.panel {
 
 .done {
   background-color: violet;
+}
+
+.done.bingo {
+  background-color: deepskyblue;
 }
 
 .notification_done {
