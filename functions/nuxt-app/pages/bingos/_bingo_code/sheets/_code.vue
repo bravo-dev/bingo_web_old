@@ -238,38 +238,32 @@ export default {
     },
     done: function (idx) {
       this.$set(this.isPanelShows, idx, false)
-      console.log(this.sheetItemDocs[idx])
       this.sheetItemDocs[idx].ref.update({
         is_done: true
       })
       .then(() =>  {
         console.log("item become done")
         this.notifyDone(idx)
-        this.checkBingo()
+        setTimeout(this.showPanelAsDone, 1000, idx)
       })
-      setTimeout(this.showPanelAsDone, 1000, idx)
     },
     bingo: function (line) {
-      line.forEach((item, idx) => {
-        this.$set(this.isPanelShows, idx, false)
-        this.sheetItems.bingo = true
-        this.sheetItemDocs[idx].ref.update({
+      line.forEach((item) => {
+        this.$set(this.isPanelShows, item, false)
+        this.sheetItems[item].bongo = true
+        this.sheetItemDocs[item].ref.update({
           is_bingo: true
         })
-        .then(() => {
-          //
-        })
-        setTimeout(this.showPanelAsBingo, 1000, idx)
+        setTimeout(this.showPanelAsBingo, 1000, item)
       })
     },
     showPanelAsDone: function(idx) {
-      console.log("called showPanel")
-      console.log(idx)
       this.sheetItems[idx].done = true
       this.$set(this.isPanelShows, idx, true)
+      this.checkBingo()
     },
     showPanelAsBingo: function(idx) {
-      this.sheetItems[idx].bongo = true
+      this.sheetItems[idx].bingo = true
       this.$set(this.isPanelShows, idx, true)
     },
     notifyDone: function (idx) {
