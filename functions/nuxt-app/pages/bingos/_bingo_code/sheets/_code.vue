@@ -13,15 +13,16 @@
               <p>{{ sheetItems[0].body }}</p>
             </div>
             </transition>
+            <div class="reach_mark" v-bind:class="{ blink: sheetItems[0].reach }"></div>
           </div>
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[1].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[1]" class="box" v-bind:class="{ done: sheetItems[1].done, bingo: sheetItems[1].bingo }" v-on:click="done(1)">
               <p>{{ sheetItems[1].body }}</p>
             </div>
             </transition>
           </div>
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[2].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[2]" class="box" v-bind:class="{ done: sheetItems[2].done, bingo: sheetItems[2].bingo }" v-on:click="done(2)">
               <p>{{ sheetItems[2].body }}</p>
@@ -30,21 +31,21 @@
           </div>
         </div>
         <div class="columns is-mobile">
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[3].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[3]" class="box" v-bind:class="{ done: sheetItems[3].done, bingo: sheetItems[3].bingo }" v-on:click="done(3)">
               <p>{{ sheetItems[3].body }}</p>
             </div>
             </transition>
           </div>
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[4].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[4]" class="box" v-bind:class="{ done: sheetItems[4].done, bingo: sheetItems[4].bingo }" v-on:click="done(4)">
               <p>{{ sheetItems[4].body }}</p>
             </div>
             </transition>
           </div>
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[5].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[5]" class="box" v-bind:class="{ done: sheetItems[5].done, bingo: sheetItems[5].bingo }" v-on:click="done(5)">
               <p>{{ sheetItems[5].body }}</p>
@@ -53,21 +54,21 @@
           </div>
         </div>
         <div class="columns is-mobile">
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[6].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[6]" class="box" v-bind:class="{ done: sheetItems[6].done, bingo: sheetItems[6].bingo }" v-on:click="done(6)">
               <p>{{ sheetItems[6].body }}</p>
             </div>
             </transition>
           </div>
-          <div class="column">
+          <div class="column" v-bind:class="{ blink: sheetItems[7].reach }">
             <transition name="bounce">
             <div v-show="isPanelShows[7]" class="box" v-bind:class="{ done: sheetItems[7].done, bingo: sheetItems[7].bingo }" v-on:click="done(7)">
               <p>{{ sheetItems[7].body }}</p>
             </div>
             </transition>
           </div>
-          <div class="column">
+          <div class="column" v-bind:class="{blink: sheetItems[8].reach}">
             <transition name="bounce">
             <div v-show="isPanelShows[8]" class="box" v-bind:class="{ done: sheetItems[8].done, bingo: sheetItems[8].bingo }" v-on:click="done(8)">
               <p>{{ sheetItems[8].body }}</p>
@@ -138,7 +139,7 @@ export default {
             const isBingo = doc.data().is_bingo
             doc.data().bingoItemRef.get().then((bingoItem) => {
               this.$set(this.sheetItems, doc.data().index,
-                {done: isDone, bingo: isBingo, body: bingoItem.data().body})
+                {done: isDone, bingo: isBingo, reach: false, body: bingoItem.data().body})
               if (!this.sheetItems.includes(null)) {
                 this.setBingos(this.sheetItems)
               }
@@ -335,12 +336,32 @@ export default {
           })
           if (bingo.isDone == false && isNotBingo == false) {
             bingo.isDone = true
+            bingo.line.map((idx) => this.unsetBlink(idx))
             console.log("bingo!!")
             this.notifyBingo()
             this.bingo(bingo.line)
           }
         })
+        this.checkReach(dones)
       }
+    },
+    checkReach: function (dones) {
+      console.log("call checkReach")
+      this.bingos.forEach((bingo) => {
+        bingo.line.forEach((idx) => {this.unsetBlink(idx)})
+      })
+      this.bingos.forEach((bingo) => {
+        let doneCount = 0
+        bingo.line.forEach((idx) => {
+          dones.map((done) => {return done.oldIndex}).forEach((oldIndex) => {
+            if (idx == oldIndex) doneCount++
+          })
+        })
+        if (doneCount == 2) {
+            console.log("reach")
+            bingo.line.forEach((idx) => {this.setBlink(idx)})
+          }
+      })
     },
     praiseBingo: function ()  {
       this.isPraisingBingo = true
@@ -348,8 +369,13 @@ export default {
     },
     hidePraiseBingo: function () {
       this.isPraisingBingo = false
+    },
+    setBlink: function (idx) {
+      this.sheetItems[idx].reach = true
+    },
+    unsetBlink: function (idx) {
+      this.sheetItems[idx].reach = false
     }
-
   }
 }
 </script>
@@ -442,7 +468,7 @@ nav.panel {
 }
 
 #praise_bingo {
-  z-index: 1;
+  z-index: 2;
   position: absolute;
   top: 210px;
 }
@@ -451,6 +477,40 @@ nav.panel {
   color: coral;
   font-weight: bold;
   font-size: 7.0rem;
+}
+
+.column {
+  z-index: 0;
+}
+.reach_mark {
+    border: 1px, dotted, hotpink;
+    border-radius: 10px;
+    position: relative;
+    z-index: 2;
+    width: 93%;
+    height: 93%;
+    margin: 8px;
+    top: -136px;
+    left: 0px;
+}
+
+.blink{
+	-webkit-animation:blink 1.0s ease-in-out infinite alternate;
+    -moz-animation:blink 1.0s ease-in-out infinite alternate;
+    animation:blink 1.0s ease-in-out infinite alternate;
+
+}
+@-webkit-keyframes blink{
+    0% {opacity:0;}
+    100% {opacity:1;}
+}
+@-moz-keyframes blink{
+    0% {opacity:0;}
+    100% {opacity:1;}
+}
+@keyframes blink{
+    0% {opacity:0;}
+    100% {opacity:1;}
 }
 
 </style>
