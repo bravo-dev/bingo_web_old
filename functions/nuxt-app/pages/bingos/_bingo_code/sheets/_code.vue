@@ -89,9 +89,9 @@
             <p>{{ notifyDoneBody }}</p>
           </div>
         </transition>
-        <transition name="bounce">
-          <div v-if="isPraisingBingo" id="praise_bingo">
-            <p>Bingo!</p>
+        <transition name="bounce-fade">
+          <div v-if="isPraisingBingo" id="praise_bingo" class="has-text-centered">
+            <p>Bingo!!</p>
           </div>
         </transition>
     </div>
@@ -265,6 +265,7 @@ export default {
     showPanelAsBingo: function(idx) {
       this.sheetItems[idx].bingo = true
       this.$set(this.isPanelShows, idx, true)
+      this.praiseBingo()
     },
     notifyDone: function (idx) {
       db.collection('notifications').add({
@@ -416,6 +417,18 @@ nav.panel {
   animation: bounce-in .5s reverse;
 }
 
+.bounce-fade-enter-active {
+  animation: bounce-in .5s;
+}
+
+.bounce-fade-leave-active {
+  transition: opacity .5s;
+}
+
+.bounce-fade-leave-to {
+  opacity: 0;
+}
+
 @keyframes bounce-in {
   0% {
     transform: scale(0)
@@ -431,7 +444,7 @@ nav.panel {
 #praise_bingo {
   z-index: 1;
   position: absolute;
-  top: 100px;
+  top: 210px;
 }
 
 #praise_bingo p {
