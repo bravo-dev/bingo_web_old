@@ -19,7 +19,7 @@ Bingo -仮名-
 - npm
 - firebase-cli (npm module)
 
-### Procedure
+## Project setup
 
 ```
 $ git clone git@github.com:hiromitsusasaki/bingo_web.git
@@ -28,9 +28,9 @@ $ cd functions
 $ npm intall
 ```
 
-### Operation
+## Operation
 
-####  開発時
+###  開発時
 
 SPAとしてローカルで起動
 
@@ -39,7 +39,7 @@ SPAとしてローカルで起動
 $ cd functions
 $ NODE_ENV=development node nuxt-server.js
 ```
-#### デプロイ前の動作確認
+### デプロイ前の動作確認
 
 SSRとしてローカルで起動
 
@@ -48,7 +48,7 @@ SSRとしてローカルで起動
 $ firebase serve --only functions:nuxtServer,hosting
 ```
 
-#### デプロイ
+### デプロイ
 
 `bingo_web/functions/`
 ```
