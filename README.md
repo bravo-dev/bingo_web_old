@@ -19,7 +19,7 @@ Bingo -仮名-
 - npm
 - firebase-cli (npm module)
 
-## Project setup
+#### Project setup
 
 ```
 $ git clone git@github.com:hiromitsusasaki/bingo_web.git
@@ -28,15 +28,15 @@ $ cd functions
 $ npm intall
 ```
 
-### Firebaseプロジェクトを変更する場合
+#### Firebaseプロジェクトを変更する場合
 
-#### firebaseプロジェクトの作成
+##### firebaseプロジェクトの作成
 ```
 $ firebase projects:create
 ```
 ※ ウェブのFirebaseコンソールからでも作成できます。
 
-#### ホスティングのデプロイ先を作成したプロジェクトに変更
+##### ホスティングのデプロイ先を作成したプロジェクトに変更
 
 `.firebaserc`
 
@@ -49,12 +49,12 @@ $ firebase projects:create
 }
 ```
 
-#### firestoreのデータベースを作成
+##### firestoreのデータベースを作成
 
 1. firebaseコンソールの`Database`>`Firestore`の画面で新しいDBを作成する
 2. セキュリティは一旦テストモードで設定する（プロダクションではきちんとセキュリティを設定する必要がある）
 
-#### Firebaseアプリを作成する
+##### Firebaseアプリを作成する
 
 1. `設定`>`プロジェクト`の設定画面で`マイアプリ`>`Webアプリ（</>アイコン）`をクリックする
 2. アプリのニックネームを入力し、`アプリを登録`ボタンをクリックする（Hostingの設定は不要）
